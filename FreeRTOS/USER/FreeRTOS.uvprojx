@@ -365,7 +365,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER, STM32F10X_HD</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CMSIS;..\FWlib\inc;..\USER;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3</IncludePath>
+              <IncludePath>..\CMSIS;..\FWlib\inc;..\USER;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\UART</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -438,6 +438,11 @@
               <FileType>1</FileType>
               <FilePath>.\user_task.c</FilePath>
             </File>
+            <File>
+              <FileName>usart1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UART\usart1.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -452,6 +457,11 @@
               <FileName>stm32f10x_rcc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWlib\src\stm32f10x_rcc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FWlib\src\stm32f10x_usart.c</FilePath>
             </File>
           </Files>
         </Group>

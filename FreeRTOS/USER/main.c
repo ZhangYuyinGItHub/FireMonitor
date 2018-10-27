@@ -14,6 +14,8 @@
 #include  "FreeRTOS.h"
 #include  "task.h"
 
+#include "usart1.h"
+
 #define USER_TASK1_PRIO   2
 #define USER_TASK1_STK    128
 TaskHandle_t user_task1_handler;
@@ -37,6 +39,8 @@ int main(void)
 	
 	/* LED ¶Ë¿Ú³õÊ¼»¯ */
 	LED_GPIO_Config();
+	
+	USART1_Config();
 	
 	xTaskCreate( (TaskFunction_t   )user_task1, 
 	             (const char*      )"user_task1",
