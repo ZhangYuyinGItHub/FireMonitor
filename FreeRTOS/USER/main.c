@@ -11,7 +11,18 @@
 #include "stm32f10x.h"
 #include "led.h"
 
-void Delay(__IO u32 nCount);
+#include  "FreeRTOS.h"
+#include  "task.h"
+
+#define USER_TASK1_PRIO   2
+#define USER_TASK1_STK    128
+TaskHandle_t user_task1_handler;
+void user_task1(void *pvP);
+
+#define USER_TASK2_PRIO   1
+#define USER_TASK2_STK    128
+TaskHandle_t user_task2_handler;
+void user_task2(void *pvP);
 
 /*
  * 函数名：main
@@ -26,27 +37,26 @@ int main(void)
 	
 	/* LED 端口初始化 */
 	LED_GPIO_Config();
+	
+	xTaskCreate( (TaskFunction_t   )user_task1, 
+	             (const char*      )"user_task1",
+							 (uint16_t         )USER_TASK1_STK,
+							 (void*            )NULL,
+							 (UBaseType_t      )USER_TASK1_PRIO,
+							 (TaskHandle_t*    )&user_task1_handler);
+							 
+		xTaskCreate( (TaskFunction_t   )user_task2, 
+	             (const char*      )"user_task2",
+							 (uint16_t         )USER_TASK2_STK,
+							 (void*            )NULL,
+							 (UBaseType_t      )USER_TASK2_PRIO,
+							 (TaskHandle_t*    )&user_task2_handler);
 
-  while (1)
-  {
-		LED1( ON );			  // 亮
-		Delay(0x6FFFEF);
-		LED1( OFF );		  // 灭
-
-		LED2( ON );
-		Delay(0x6FFFEF);
-		LED2( OFF );
-
-		LED3( ON );
-		Delay(0x6FFFEF);
-		LED3( OFF );      
-  }
+    vTaskStartScheduler();
+  
 }
 
-void Delay(__IO u32 nCount)
-{
-  for(; nCount != 0; nCount--);
-} 
+
 
 
 /******************* (C) COPYRIGHT 2011 野火嵌入式开发工作室 *****END OF FILE****/

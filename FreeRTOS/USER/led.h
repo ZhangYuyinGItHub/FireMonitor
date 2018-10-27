@@ -11,19 +11,15 @@
 #define OFF 1
 
 #define LED1(a)	if (a)	\
-					GPIO_SetBits(GPIOB,GPIO_Pin_0);\
+					GPIO_SetBits(GPIOB,GPIO_Pin_6);\
 					else		\
-					GPIO_ResetBits(GPIOB,GPIO_Pin_0)
+					GPIO_ResetBits(GPIOB,GPIO_Pin_6)
 
 #define LED2(a)	if (a)	\
-					GPIO_SetBits(GPIOB,GPIO_Pin_4);\
+					GPIO_SetBits(GPIOB,GPIO_Pin_7);\
 					else		\
-					GPIO_ResetBits(GPIOB,GPIO_Pin_4)
+					GPIO_ResetBits(GPIOB,GPIO_Pin_7)
 
-#define LED3(a)	if (a)	\
-					GPIO_SetBits(GPIOB,GPIO_Pin_5);\
-					else		\
-					GPIO_ResetBits(GPIOB,GPIO_Pin_5)
 
 void LED_GPIO_Config(void);
 
