@@ -461,6 +461,11 @@
               <FileType>1</FileType>
               <FilePath>..\FWlib\src\stm32f10x_usart.c</FilePath>
             </File>
+            <File>
+              <FileName>misc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FWlib\src\misc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

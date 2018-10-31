@@ -1,7 +1,7 @@
 /******************** (C) COPYRIGHT 2011 野火嵌入式开发工作室 ********************
  * 文件名  ：usart1.c
  * 描述    ：将printf函数重定向到USART1。这样就可以用printf函数将单片机的数据
- *           打印到PC上的超级终端或串口调试助手。         
+ *           打印到PC上的超级终端或串口调试助手。
  * 实验平台：野火STM32开发板
  * 硬件连接：------------------------
  *          | PA9  - USART1(Tx)      |
@@ -9,13 +9,15 @@
  *           ------------------------
  * 库版本  ：ST3.0.0
  *
- * 作者    ：fire  QQ: 313303034 
+ * 作者    ：fire  QQ: 313303034
  * 博客    ：firestm32.blog.chinaunix.net
 **********************************************************************************/
 
 #include "usart1.h"
 #include <stdarg.h>
+#include "stm32f10x.h"
 #include "stm32f10x_usart.h"
+#include "misc.h"
 
 /*
  * 函数名：USART1_Config
@@ -26,32 +28,56 @@
  */
 void USART1_Config(void)
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	USART_InitTypeDef USART_InitStructure;
+    GPIO_InitTypeDef GPIO_InitStructure;
+    USART_InitTypeDef USART_InitStructure;
 
-	/* config USART1 clock */
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA, ENABLE);
+    /* config USART1 clock */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1 | RCC_APB2Periph_GPIOA, ENABLE);
 
-	/* USART1 GPIO config */
-   /* Configure USART1 Tx (PA.09) as alternate function push-pull */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);    
-  /* Configure USART1 Rx (PA.10) as input floating */
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_Init(GPIOA, &GPIO_InitStructure);
-	  
-	/* USART1 mode config */
-	USART_InitStructure.USART_BaudRate = 115200;
-	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-	USART_InitStructure.USART_StopBits = USART_StopBits_1;
-	USART_InitStructure.USART_Parity = USART_Parity_No ;
-	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-	USART_Init(USART1, &USART_InitStructure); 
-  USART_Cmd(USART1, ENABLE);
+    /* USART1 GPIO config */
+    /* Configure USART1 Tx (PA.09) as alternate function push-pull */
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_9;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    /* Configure USART1 Rx (PA.10) as input floating */
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    /* USART1 mode config */
+    USART_InitStructure.USART_BaudRate = 115200;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No ;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+    USART_Init(USART1, &USART_InitStructure);
+
+    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//enable uasrt1 int
+
+    USART_Cmd(USART1, ENABLE);
+}
+
+/*
+ * 函数名：UART1_NVIC_Configuration
+ * 描述  ：USART1 中断配置
+ * 输入  ：无
+ * 输出  : 无
+ * 调用  ：外部调用
+ */
+void UART1_NVIC_Configuration(void)
+{
+    NVIC_InitTypeDef NVIC_InitStructure;
+    /* Configure the NVIC Preemption Priority Bits */
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
+
+    /* Enable the USARTy Interrupt */
+    NVIC_InitStructure.NVIC_IRQChannel = USART1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 6;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure);
 }
 
 /*
@@ -63,11 +89,11 @@ void USART1_Config(void)
  */
 int fputc(int ch, FILE *f)
 {
-/* 将Printf内容发往串口 */
-  USART_SendData(USART1, (unsigned char) ch);
-  while (!(USART1->SR & USART_FLAG_TXE));
- 
-  return (ch);
+    /* 将Printf内容发往串口 */
+    USART_SendData(USART1, (unsigned char) ch);
+    while (!(USART1->SR & USART_FLAG_TXE));
+
+    return (ch);
 }
 
 /*
@@ -133,77 +159,79 @@ static char *itoa(int value, char *string, int radix)
  * 函数名：USART1_printf
  * 描述  ：格式化输出，类似于C库中的printf，但这里没有用到C库
  * 输入  ：-USARTx 串口通道，这里只用到了串口1，即USART1
- *		     -Data   要发送到串口的内容的指针
- *			   -...    其他参数
+ *           -Data   要发送到串口的内容的指针
+ *             -...    其他参数
  * 输出  ：无
- * 返回  ：无 
+ * 返回  ：无
  * 调用  ：外部调用
  *         典型应用USART1_printf( USART1, "\r\n this is a demo \r\n" );
- *            		 USART1_printf( USART1, "\r\n %d \r\n", i );
- *            		 USART1_printf( USART1, "\r\n %s \r\n", j );
+ *                   USART1_printf( USART1, "\r\n %d \r\n", i );
+ *                   USART1_printf( USART1, "\r\n %s \r\n", j );
  */
-void USART1_printf(USART_TypeDef* USARTx, uint8_t *Data,...)
+void USART1_printf(USART_TypeDef *USARTx, uint8_t *Data, ...)
 {
-	const char *s;
-  int d;   
-  char buf[16];
+    const char *s;
+    int d;
+    char buf[16];
 
-  va_list ap;
-  va_start(ap, Data);
+    va_list ap;
+    va_start(ap, Data);
 
-	while ( *Data != 0)     // 判断是否到达字符串结束符
-	{				                          
-		if ( *Data == 0x5c )  //'\'
-		{									  
-			switch ( *++Data )
-			{
-				case 'r':							          //回车符
-					USART_SendData(USARTx, 0x0d);
-					Data ++;
-					break;
+    while (*Data != 0)      // 判断是否到达字符串结束符
+    {
+        if (*Data == 0x5c)    //'\'
+        {
+            switch (*++Data)
+            {
+            case 'r':                                     //回车符
+                USART_SendData(USARTx, 0x0d);
+                Data ++;
+                break;
 
-				case 'n':							          //换行符
-					USART_SendData(USARTx, 0x0a);	
-					Data ++;
-					break;
-				
-				default:
-					Data ++;
-				    break;
-			}			 
-		}
-		else if ( *Data == '%')
-		{									  //
-			switch ( *++Data )
-			{				
-				case 's':										  //字符串
-					s = va_arg(ap, const char *);
-          for ( ; *s; s++) 
-					{
-						USART_SendData(USARTx,*s);
-						while( USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET );
-          }
-					Data++;
-          break;
+            case 'n':                                     //换行符
+                USART_SendData(USARTx, 0x0a);
+                Data ++;
+                break;
 
-        case 'd':										//十进制
-          d = va_arg(ap, int);
-          itoa(d, buf, 10);
-          for (s = buf; *s; s++) 
-					{
-						USART_SendData(USARTx,*s);
-						while( USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET );
-          }
-					Data++;
-          break;
-				 default:
-						Data++;
-				    break;
-			}		 
-		} /* end of else if */
-		else USART_SendData(USARTx, *Data++);
-		while( USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET );
-	}
+            default:
+                Data ++;
+                break;
+            }
+        }
+        else if (*Data == '%')
+        {
+            //
+            switch (*++Data)
+            {
+            case 's':                                         //字符串
+                s = va_arg(ap, const char *);
+                for (; *s; s++)
+                {
+                    USART_SendData(USARTx, *s);
+                    while (USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET);
+                }
+                Data++;
+                break;
+
+            case 'd':                                       //十进制
+                d = va_arg(ap, int);
+                itoa(d, buf, 10);
+                for (s = buf; *s; s++)
+                {
+                    USART_SendData(USARTx, *s);
+                    while (USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET);
+                }
+                Data++;
+                break;
+            default:
+                Data++;
+                break;
+            }
+        } /* end of else if */
+        else { USART_SendData(USARTx, *Data++); }
+        while (USART_GetFlagStatus(USARTx, USART_FLAG_TC) == RESET);
+    }
+    va_end(ap);
 }
-/******************* (C) COPYRIGHT 2011 野火嵌入式开发工作室 *****END OF FILE****/ 
+/******************* (C) COPYRIGHT 2011 野火嵌入式开发工作室 *****END OF FILE****/
 

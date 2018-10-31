@@ -1,11 +1,11 @@
 /**
   ******************************************************************************
-  * @file    Project/Template/stm32f10x_it.c 
+  * @file    Project/Template/stm32f10x_it.c
   * @author  MCD Application Team
   * @version V3.0.0
   * @date    04/06/2009
   * @brief   Main Interrupt Service Routines.
-  *          This file provides template for all exceptions handler and 
+  *          This file provides template for all exceptions handler and
   *          peripherals interrupt service routine.
   ******************************************************************************
   * @copy
@@ -18,11 +18,14 @@
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
   * <h2><center>&copy; COPYRIGHT 2009 STMicroelectronics</center></h2>
-  */ 
+  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x_it.h"
-
+#include "usart1.h"
+#include "stm32f10x_usart.h"
+#include "FreeRTOS.h"
+#include "queue.h"
 /** @addtogroup Template_Project
   * @{
   */
@@ -54,10 +57,12 @@ void NMI_Handler(void)
   */
 void HardFault_Handler(void)
 {
-  /* Go to infinite loop when Hard Fault exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Hard Fault exception occurs */
+    printf("Err: HardFault_Handler!\r\n");
+    while (1)
+    {
+
+    }
 }
 
 /**
@@ -67,10 +72,10 @@ void HardFault_Handler(void)
   */
 void MemManage_Handler(void)
 {
-  /* Go to infinite loop when Memory Manage exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Memory Manage exception occurs */
+    while (1)
+    {
+    }
 }
 
 /**
@@ -80,10 +85,10 @@ void MemManage_Handler(void)
   */
 void BusFault_Handler(void)
 {
-  /* Go to infinite loop when Bus Fault exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Bus Fault exception occurs */
+    while (1)
+    {
+    }
 }
 
 /**
@@ -93,10 +98,10 @@ void BusFault_Handler(void)
   */
 void UsageFault_Handler(void)
 {
-  /* Go to infinite loop when Usage Fault exception occurs */
-  while (1)
-  {
-  }
+    /* Go to infinite loop when Usage Fault exception occurs */
+    while (1)
+    {
+    }
 }
 
 /**
@@ -115,6 +120,32 @@ void UsageFault_Handler(void)
   */
 void DebugMon_Handler(void)
 {
+}
+
+
+/**
+  * @brief  This function handles usart1 exception.
+  * @param  None
+  * @retval : None
+  */
+extern QueueHandle_t xQueueRx;
+void USART1_IRQHandler(void)
+{
+    u8 value;
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
+    {
+        value = USART_ReceiveData(USART1);
+        if (xQueueRx != 0)
+        {
+            xQueueSendFromISR(xQueueRx, &value, 0);
+        }
+
+    }
+
+    portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
+
+
 }
 
 /**
@@ -153,7 +184,7 @@ void DebugMon_Handler(void)
 
 /**
   * @}
-  */ 
+  */
 
 
 /******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/
