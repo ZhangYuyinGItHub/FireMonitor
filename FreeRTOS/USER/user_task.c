@@ -10,17 +10,17 @@
  *                              Micro
  *============================================================================*/
 #define USER_TASK1_PRIO   3
-#define USER_TASK1_STK    512
+#define USER_TASK1_STK    TASK_STK_SIZE
 TaskHandle_t user_task1_handler;
 
 
 #define USER_TASK2_PRIO   2
-#define USER_TASK2_STK    512
+#define USER_TASK2_STK    TASK_STK_SIZE
 TaskHandle_t user_task2_handler;
 
 
 #define UART1_REV_PRIO    4
-#define UART1_REV_STK    512
+#define UART1_REV_STK    TASK_STK_SIZE
 TaskHandle_t uart1_task_handler;
 
 
@@ -40,7 +40,7 @@ void usart1_handle_task(void *pvP);
 void os_task_init(void)
 {
     taskENTER_CRITICAL();
-    xQueueRx = xQueueCreate(10, sizeof(u8));
+    xQueueRx = xQueueCreate(UART1_QUEUE_SIZE, sizeof(u8));
 
 
     if (xQueueRx)
@@ -71,7 +71,7 @@ void os_task_init(void)
                 (uint16_t)UART1_REV_STK,
                 (void *)NULL,
                 (UBaseType_t)UART1_REV_PRIO,
-                (TaskHandle_t *)&user_task1_handler);
+                (TaskHandle_t *)&uart1_task_handler);
 
     taskEXIT_CRITICAL();
 
@@ -83,20 +83,19 @@ void Delay(__IO u32 nCount)
 
 void usart1_handle_task(void *pvP)
 {
+
     u8 rev = 0;
     printf("uart task is init\r\n");
     while (1)
     {
         if ((xQueueRx != 0) && (xQueueReceive(xQueueRx, &rev, portMAX_DELAY)))
         {
-            printf("rev data = 0x%x\r\n", rev);
-            //vTaskDelay(4000);
+            printf("0x%x,\r\n", rev);
         }
         else
         {
             printf("no rev data \r\n");
         }
-        //vTaskDelay(4000);
     }
 }
 
@@ -105,11 +104,10 @@ void user_task1(void *pvP)
     printf("task1 is init\r\n");
     while (1)
     {
-        //printf("task1 is start\r\n");
         LED1(ON);              // ÁÁ
         Delay(0x6FFFEF);
         LED1(OFF);         // Ãð
-        //Delay(0x6FFFEF);
+
         vTaskDelay(4000);
     }
 }

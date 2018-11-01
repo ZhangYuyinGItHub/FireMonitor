@@ -142,7 +142,6 @@ void USART1_IRQHandler(void)
         }
 
     }
-
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 
 
