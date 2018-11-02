@@ -86,10 +86,10 @@ uint8_t voice_out_queue(void)
     }
     else
     {
-        //µ÷Õû¶ÓÁÐ
-        g_voice_data.send_idx = (g_voice_data.send_idx + 1) % g_voice_data.size;
 
         uart_send_data(USART2, g_voice_data.p_buf + g_voice_data.send_idx * M_BLOCK_SIZE, M_BLOCK_SIZE);
+        //µ÷Õû¶ÓÁÐ
+        g_voice_data.send_idx = (g_voice_data.send_idx + 1) % g_voice_data.size;
 
         return 0;
     }
@@ -156,7 +156,7 @@ void usart1_dma_config(void)
 
     /* DMA1 Channel5 (triggered by USART1 Rx event) Config */
     DMA_DeInit(DMA1_Channel5);
-    DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART1->DR;// ???????,???“????”
+    DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART1->DR;// ???????,????????
     DMA_InitStructure.DMA_MemoryBaseAddr     = (uint32_t)voice_buf.buf0;// ????,??????
     DMA_InitStructure.DMA_DIR                = DMA_DIR_PeripheralSRC;//pripheral act in source role
     DMA_InitStructure.DMA_BufferSize         = DMA_SIZE ;
