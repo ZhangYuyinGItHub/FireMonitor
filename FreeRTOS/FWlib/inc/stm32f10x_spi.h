@@ -1,13 +1,13 @@
 /**
   ******************************************************************************
-  * @file  stm32f10x_spi.h
+  * @file    stm32f10x_spi.h
   * @author  MCD Application Team
-  * @version  V3.0.0
-  * @date  04/06/2009
-  * @brief  This file contains all the functions prototypes for the SPI firmware 
-  *         library.
+  * @version V3.5.0
+  * @date    11-March-2011
+  * @brief   This file contains all the functions prototypes for the SPI firmware
+  *          library.
   ******************************************************************************
-  * @copy
+  * @attention
   *
   * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
   * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
@@ -16,58 +16,95 @@
   * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
   * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
   *
-  * <h2><center>&copy; COPYRIGHT 2009 STMicroelectronics</center></h2>
-  */ 
+  * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
+  ******************************************************************************
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32F10x_SPI_H
 #define __STM32F10x_SPI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
 
-/** @addtogroup StdPeriph_Driver
+/** @addtogroup STM32F10x_StdPeriph_Driver
   * @{
   */
 
 /** @addtogroup SPI
   * @{
-  */ 
+  */
 
 /** @defgroup SPI_Exported_Types
   * @{
   */
 
-/** 
-  * @brief  SPI Init structure definition  
+/**
+  * @brief  SPI Init structure definition
   */
 
 typedef struct
 {
-  uint16_t SPI_Direction;
-  uint16_t SPI_Mode;
-  uint16_t SPI_DataSize;
-  uint16_t SPI_CPOL;
-  uint16_t SPI_CPHA;
-  uint16_t SPI_NSS;
-  uint16_t SPI_BaudRatePrescaler;
-  uint16_t SPI_FirstBit;
-  uint16_t SPI_CRCPolynomial;
-}SPI_InitTypeDef;
+    uint16_t SPI_Direction;           /*!< Specifies the SPI unidirectional or bidirectional data mode.
+                                         This parameter can be a value of @ref SPI_data_direction */
 
-/** 
-  * @brief  I2S Init structure definition  
+    uint16_t SPI_Mode;                /*!< Specifies the SPI operating mode.
+                                         This parameter can be a value of @ref SPI_mode */
+
+    uint16_t SPI_DataSize;            /*!< Specifies the SPI data size.
+                                         This parameter can be a value of @ref SPI_data_size */
+
+    uint16_t SPI_CPOL;                /*!< Specifies the serial clock steady state.
+                                         This parameter can be a value of @ref SPI_Clock_Polarity */
+
+    uint16_t SPI_CPHA;                /*!< Specifies the clock active edge for the bit capture.
+                                         This parameter can be a value of @ref SPI_Clock_Phase */
+
+    uint16_t SPI_NSS;                 /*!< Specifies whether the NSS signal is managed by
+                                         hardware (NSS pin) or by software using the SSI bit.
+                                         This parameter can be a value of @ref SPI_Slave_Select_management */
+
+    uint16_t SPI_BaudRatePrescaler;   /*!< Specifies the Baud Rate prescaler value which will be
+                                         used to configure the transmit and receive SCK clock.
+                                         This parameter can be a value of @ref SPI_BaudRate_Prescaler.
+                                         @note The communication clock is derived from the master
+                                               clock. The slave clock does not need to be set. */
+
+    uint16_t SPI_FirstBit;            /*!< Specifies whether data transfers start from MSB or LSB bit.
+                                         This parameter can be a value of @ref SPI_MSB_LSB_transmission */
+
+    uint16_t SPI_CRCPolynomial;       /*!< Specifies the polynomial used for the CRC calculation. */
+} SPI_InitTypeDef;
+
+/**
+  * @brief  I2S Init structure definition
   */
 
 typedef struct
 {
-  uint16_t I2S_Mode;
-  uint16_t I2S_Standard;
-  uint16_t I2S_DataFormat;
-  uint16_t I2S_MCLKOutput;
-  uint16_t I2S_AudioFreq;
-  uint16_t I2S_CPOL;
-}I2S_InitTypeDef;
+
+    uint16_t I2S_Mode;         /*!< Specifies the I2S operating mode.
+                                  This parameter can be a value of @ref I2S_Mode */
+
+    uint16_t I2S_Standard;     /*!< Specifies the standard used for the I2S communication.
+                                  This parameter can be a value of @ref I2S_Standard */
+
+    uint16_t I2S_DataFormat;   /*!< Specifies the data format for the I2S communication.
+                                  This parameter can be a value of @ref I2S_Data_Format */
+
+    uint16_t I2S_MCLKOutput;   /*!< Specifies whether the I2S MCLK output is enabled or not.
+                                  This parameter can be a value of @ref I2S_MCLK_Output */
+
+    uint32_t I2S_AudioFreq;    /*!< Specifies the frequency selected for the I2S communication.
+                                  This parameter can be a value of @ref I2S_Audio_Frequency */
+
+    uint16_t I2S_CPOL;         /*!< Specifies the idle state of the I2S clock.
+                                  This parameter can be a value of @ref I2S_Clock_Polarity */
+} I2S_InitTypeDef;
 
 /**
   * @}
@@ -77,16 +114,17 @@ typedef struct
   * @{
   */
 
-#define IS_SPI_ALL_PERIPH(PERIPH) (((*(uint32_t*)&(PERIPH)) == SPI1_BASE) || \
-                                   ((*(uint32_t*)&(PERIPH)) == SPI2_BASE) || \
-                                   ((*(uint32_t*)&(PERIPH)) == SPI3_BASE))
-#define IS_SPI_23_PERIPH(PERIPH) (((*(uint32_t*)&(PERIPH)) == SPI2_BASE) || \
-                                  ((*(uint32_t*)&(PERIPH)) == SPI3_BASE))
+#define IS_SPI_ALL_PERIPH(PERIPH) (((PERIPH) == SPI1) || \
+                                   ((PERIPH) == SPI2) || \
+                                   ((PERIPH) == SPI3))
 
-/** @defgroup SPI_data_direction_mode 
+#define IS_SPI_23_PERIPH(PERIPH) (((PERIPH) == SPI2) || \
+                                  ((PERIPH) == SPI3))
+
+/** @defgroup SPI_data_direction
   * @{
   */
-  
+
 #define SPI_Direction_2Lines_FullDuplex ((uint16_t)0x0000)
 #define SPI_Direction_2Lines_RxOnly     ((uint16_t)0x0400)
 #define SPI_Direction_1Line_Rx          ((uint16_t)0x8000)
@@ -99,7 +137,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_master_slave_mode 
+/** @defgroup SPI_mode
   * @{
   */
 
@@ -111,7 +149,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_data_size 
+/** @defgroup SPI_data_size
   * @{
   */
 
@@ -121,9 +159,9 @@ typedef struct
                                    ((DATASIZE) == SPI_DataSize_8b))
 /**
   * @}
-  */ 
+  */
 
-/** @defgroup SPI_Clock_Polarity 
+/** @defgroup SPI_Clock_Polarity
   * @{
   */
 
@@ -135,7 +173,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_Clock_Phase 
+/** @defgroup SPI_Clock_Phase
   * @{
   */
 
@@ -147,7 +185,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_Slave_Select_management 
+/** @defgroup SPI_Slave_Select_management
   * @{
   */
 
@@ -157,9 +195,9 @@ typedef struct
                          ((NSS) == SPI_NSS_Hard))
 /**
   * @}
-  */ 
+  */
 
-/** @defgroup SPI_BaudRate_Prescaler_ 
+/** @defgroup SPI_BaudRate_Prescaler
   * @{
   */
 
@@ -181,9 +219,9 @@ typedef struct
                                               ((PRESCALER) == SPI_BaudRatePrescaler_256))
 /**
   * @}
-  */ 
+  */
 
-/** @defgroup SPI_MSB_LSB_transmission 
+/** @defgroup SPI_MSB_LSB_transmission
   * @{
   */
 
@@ -195,7 +233,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup I2S_Mode 
+/** @defgroup I2S_Mode
   * @{
   */
 
@@ -211,7 +249,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup I2S_Standard 
+/** @defgroup I2S_Standard
   * @{
   */
 
@@ -229,7 +267,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup I2S_Data_Format 
+/** @defgroup I2S_Data_Format
   * @{
   */
 
@@ -243,9 +281,9 @@ typedef struct
                                     ((FORMAT) == I2S_DataFormat_32b))
 /**
   * @}
-  */ 
+  */
 
-/** @defgroup I2S_MCLK_Output 
+/** @defgroup I2S_MCLK_Output
   * @{
   */
 
@@ -257,27 +295,29 @@ typedef struct
   * @}
   */
 
-/** @defgroup I2S_Audio_Frequency 
+/** @defgroup I2S_Audio_Frequency
   * @{
   */
 
-#define I2S_AudioFreq_48k                ((uint16_t)48000)
-#define I2S_AudioFreq_44k                ((uint16_t)44100)
-#define I2S_AudioFreq_22k                ((uint16_t)22050)
-#define I2S_AudioFreq_16k                ((uint16_t)16000)
-#define I2S_AudioFreq_8k                 ((uint16_t)8000)
-#define I2S_AudioFreq_Default            ((uint16_t)2)
-#define IS_I2S_AUDIO_FREQ(FREQ) (((FREQ) == I2S_AudioFreq_48k) || \
-                                 ((FREQ) == I2S_AudioFreq_44k) || \
-                                 ((FREQ) == I2S_AudioFreq_22k) || \
-                                 ((FREQ) == I2S_AudioFreq_16k) || \
-                                 ((FREQ) == I2S_AudioFreq_8k)  || \
+#define I2S_AudioFreq_192k               ((uint32_t)192000)
+#define I2S_AudioFreq_96k                ((uint32_t)96000)
+#define I2S_AudioFreq_48k                ((uint32_t)48000)
+#define I2S_AudioFreq_44k                ((uint32_t)44100)
+#define I2S_AudioFreq_32k                ((uint32_t)32000)
+#define I2S_AudioFreq_22k                ((uint32_t)22050)
+#define I2S_AudioFreq_16k                ((uint32_t)16000)
+#define I2S_AudioFreq_11k                ((uint32_t)11025)
+#define I2S_AudioFreq_8k                 ((uint32_t)8000)
+#define I2S_AudioFreq_Default            ((uint32_t)2)
+
+#define IS_I2S_AUDIO_FREQ(FREQ) ((((FREQ) >= I2S_AudioFreq_8k) && \
+                                  ((FREQ) <= I2S_AudioFreq_192k)) || \
                                  ((FREQ) == I2S_AudioFreq_Default))
 /**
   * @}
-  */ 
+  */
 
-/** @defgroup I2S_Clock_Polarity 
+/** @defgroup I2S_Clock_Polarity
   * @{
   */
 
@@ -289,7 +329,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_I2S_DMA_transfer_requests 
+/** @defgroup SPI_I2S_DMA_transfer_requests
   * @{
   */
 
@@ -300,7 +340,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_NSS_internal_software_mangement 
+/** @defgroup SPI_NSS_internal_software_management
   * @{
   */
 
@@ -312,7 +352,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_CRC_Transmit_Receive 
+/** @defgroup SPI_CRC_Transmit_Receive
   * @{
   */
 
@@ -323,7 +363,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_direction_transmit_receive 
+/** @defgroup SPI_direction_transmit_receive
   * @{
   */
 
@@ -335,7 +375,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_I2S_interrupts_definition 
+/** @defgroup SPI_I2S_interrupts_definition
   * @{
   */
 
@@ -343,8 +383,8 @@ typedef struct
 #define SPI_I2S_IT_RXNE                 ((uint8_t)0x60)
 #define SPI_I2S_IT_ERR                  ((uint8_t)0x50)
 #define IS_SPI_I2S_CONFIG_IT(IT) (((IT) == SPI_I2S_IT_TXE) || \
-                                 ((IT) == SPI_I2S_IT_RXNE) || \
-                                 ((IT) == SPI_I2S_IT_ERR))
+                                  ((IT) == SPI_I2S_IT_RXNE) || \
+                                  ((IT) == SPI_I2S_IT_ERR))
 #define SPI_I2S_IT_OVR                  ((uint8_t)0x56)
 #define SPI_IT_MODF                     ((uint8_t)0x55)
 #define SPI_IT_CRCERR                   ((uint8_t)0x54)
@@ -357,7 +397,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_I2S_flags_definition 
+/** @defgroup SPI_I2S_flags_definition
   * @{
   */
 
@@ -378,7 +418,7 @@ typedef struct
   * @}
   */
 
-/** @defgroup SPI_CRC_polynomial 
+/** @defgroup SPI_CRC_polynomial
   * @{
   */
 
@@ -403,29 +443,33 @@ typedef struct
   * @{
   */
 
-void SPI_I2S_DeInit(SPI_TypeDef* SPIx);
-void SPI_Init(SPI_TypeDef* SPIx, SPI_InitTypeDef* SPI_InitStruct);
-void I2S_Init(SPI_TypeDef* SPIx, I2S_InitTypeDef* I2S_InitStruct);
-void SPI_StructInit(SPI_InitTypeDef* SPI_InitStruct);
-void I2S_StructInit(I2S_InitTypeDef* I2S_InitStruct);
-void SPI_Cmd(SPI_TypeDef* SPIx, FunctionalState NewState);
-void I2S_Cmd(SPI_TypeDef* SPIx, FunctionalState NewState);
-void SPI_I2S_ITConfig(SPI_TypeDef* SPIx, uint8_t SPI_I2S_IT, FunctionalState NewState);
-void SPI_I2S_DMACmd(SPI_TypeDef* SPIx, uint16_t SPI_I2S_DMAReq, FunctionalState NewState);
-void SPI_I2S_SendData(SPI_TypeDef* SPIx, uint16_t Data);
-uint16_t SPI_I2S_ReceiveData(SPI_TypeDef* SPIx);
-void SPI_NSSInternalSoftwareConfig(SPI_TypeDef* SPIx, uint16_t SPI_NSSInternalSoft);
-void SPI_SSOutputCmd(SPI_TypeDef* SPIx, FunctionalState NewState);
-void SPI_DataSizeConfig(SPI_TypeDef* SPIx, uint16_t SPI_DataSize);
-void SPI_TransmitCRC(SPI_TypeDef* SPIx);
-void SPI_CalculateCRC(SPI_TypeDef* SPIx, FunctionalState NewState);
-uint16_t SPI_GetCRC(SPI_TypeDef* SPIx, uint8_t SPI_CRC);
-uint16_t SPI_GetCRCPolynomial(SPI_TypeDef* SPIx);
-void SPI_BiDirectionalLineConfig(SPI_TypeDef* SPIx, uint16_t SPI_Direction);
-FlagStatus SPI_I2S_GetFlagStatus(SPI_TypeDef* SPIx, uint16_t SPI_I2S_FLAG);
-void SPI_I2S_ClearFlag(SPI_TypeDef* SPIx, uint16_t SPI_I2S_FLAG);
-ITStatus SPI_I2S_GetITStatus(SPI_TypeDef* SPIx, uint8_t SPI_I2S_IT);
-void SPI_I2S_ClearITPendingBit(SPI_TypeDef* SPIx, uint8_t SPI_I2S_IT);
+void SPI_I2S_DeInit(SPI_TypeDef *SPIx);
+void SPI_Init(SPI_TypeDef *SPIx, SPI_InitTypeDef *SPI_InitStruct);
+void I2S_Init(SPI_TypeDef *SPIx, I2S_InitTypeDef *I2S_InitStruct);
+void SPI_StructInit(SPI_InitTypeDef *SPI_InitStruct);
+void I2S_StructInit(I2S_InitTypeDef *I2S_InitStruct);
+void SPI_Cmd(SPI_TypeDef *SPIx, FunctionalState NewState);
+void I2S_Cmd(SPI_TypeDef *SPIx, FunctionalState NewState);
+void SPI_I2S_ITConfig(SPI_TypeDef *SPIx, uint8_t SPI_I2S_IT, FunctionalState NewState);
+void SPI_I2S_DMACmd(SPI_TypeDef *SPIx, uint16_t SPI_I2S_DMAReq, FunctionalState NewState);
+void SPI_I2S_SendData(SPI_TypeDef *SPIx, uint16_t Data);
+uint16_t SPI_I2S_ReceiveData(SPI_TypeDef *SPIx);
+void SPI_NSSInternalSoftwareConfig(SPI_TypeDef *SPIx, uint16_t SPI_NSSInternalSoft);
+void SPI_SSOutputCmd(SPI_TypeDef *SPIx, FunctionalState NewState);
+void SPI_DataSizeConfig(SPI_TypeDef *SPIx, uint16_t SPI_DataSize);
+void SPI_TransmitCRC(SPI_TypeDef *SPIx);
+void SPI_CalculateCRC(SPI_TypeDef *SPIx, FunctionalState NewState);
+uint16_t SPI_GetCRC(SPI_TypeDef *SPIx, uint8_t SPI_CRC);
+uint16_t SPI_GetCRCPolynomial(SPI_TypeDef *SPIx);
+void SPI_BiDirectionalLineConfig(SPI_TypeDef *SPIx, uint16_t SPI_Direction);
+FlagStatus SPI_I2S_GetFlagStatus(SPI_TypeDef *SPIx, uint16_t SPI_I2S_FLAG);
+void SPI_I2S_ClearFlag(SPI_TypeDef *SPIx, uint16_t SPI_I2S_FLAG);
+ITStatus SPI_I2S_GetITStatus(SPI_TypeDef *SPIx, uint8_t SPI_I2S_IT);
+void SPI_I2S_ClearITPendingBit(SPI_TypeDef *SPIx, uint8_t SPI_I2S_IT);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /*__STM32F10x_SPI_H */
 /**
@@ -440,4 +484,4 @@ void SPI_I2S_ClearITPendingBit(SPI_TypeDef* SPIx, uint8_t SPI_I2S_IT);
   * @}
   */
 
-/******************* (C) COPYRIGHT 2009 STMicroelectronics *****END OF FILE****/
+/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

@@ -7,7 +7,7 @@
  *          | PA9  - USART1(Tx)      |
  *          | PA10 - USART1(Rx)      |
  *           ------------------------
- * 库版本  ：ST3.0.0
+ * 库版本  ：ST3.5.0
  *
  * 作者    ：fire  QQ: 313303034
  * 博客    ：firestm32.blog.chinaunix.net
@@ -18,6 +18,16 @@
 #include "stm32f10x.h"
 #include "stm32f10x_usart.h"
 #include "misc.h"
+
+void uart_send_data(USART_TypeDef *uart_idx, uint8_t *buf, uint32_t len)
+{
+    uint32_t index = 0;
+    for (index = 0; index < len; index++)
+    {
+        USART_SendData(uart_idx, *(uint8_t *)(buf + index));
+        while (USART_GetFlagStatus(USART2, USART_FLAG_TC) != SET);
+    }
+}
 
 /*
  * 函数名：USART1_Config
@@ -46,7 +56,7 @@ void USART1_Config(void)
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     /* USART1 mode config */
-    USART_InitStructure.USART_BaudRate = 115200;
+    USART_InitStructure.USART_BaudRate = 9600;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No ;
@@ -54,10 +64,54 @@ void USART1_Config(void)
     USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
     USART_Init(USART1, &USART_InitStructure);
 
-    USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//enable uasrt1 int
+    //USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//enable uasrt1 int
 
     USART_Cmd(USART1, ENABLE);
 }
+
+void USART2_Config(void)
+{
+    GPIO_InitTypeDef GPIO_InitStructure;//
+//    NVIC_InitTypeDef NVIC_InitStructure;//
+    USART_InitTypeDef USART_InitStructure;//
+
+    /* Enable the USART2 Pins Software Remapping */
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+
+
+    /* Configure USART2 Rx (PA.03) as input floating */
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    /* Configure USART2 Tx (PA.02) as alternate function push-pull */
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+    /* Enable the USART2 Interrupt */
+//    NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
+//    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 3;
+//    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+//    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+//    NVIC_Init(&NVIC_InitStructure);
+
+    USART_InitStructure.USART_BaudRate = 115200;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;//
+    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx; //
+
+    USART_Init(USART2, &USART_InitStructure);
+    //USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+    //USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+    /* Enable USART2 */
+    USART_Cmd(USART2, ENABLE);
+}
+
 
 /*
  * 函数名：UART1_NVIC_Configuration

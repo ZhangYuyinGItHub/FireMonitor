@@ -6,6 +6,8 @@
 #include  "task.h"
 #include "queue.h"
 
+#include "voice.h"
+
 /*============================================================================*
  *                              Micro
  *============================================================================*/
@@ -28,7 +30,7 @@ TaskHandle_t uart1_task_handler;
  *                              Local Variables
  *============================================================================*/
 xQueueHandle xQueueRx;
-
+extern st_Voice_buf voice_buf;
 /*============================================================================*
  *                              Local Functions
  *============================================================================*/
@@ -40,16 +42,18 @@ void usart1_handle_task(void *pvP);
 void os_task_init(void)
 {
     taskENTER_CRITICAL();
-    xQueueRx = xQueueCreate(UART1_QUEUE_SIZE, sizeof(u8));
+
+
+    xQueueRx = xQueueCreate(UART1_QUEUE_SIZE, sizeof(stg_task_msg));
 
 
     if (xQueueRx)
     {
-        printf("Uart Queue Create Success!\r\n");
+        //printf("Uart Queue Create Success!\r\n");
     }
     else
     {
-        printf("Err: Uart Queue Create failed!\r\n");
+        //printf("Err: Uart Queue Create failed!\r\n");
     }
 
     xTaskCreate((TaskFunction_t)user_task1,
@@ -81,40 +85,63 @@ void Delay(__IO u32 nCount)
     for (; nCount != 0; nCount--);
 }
 
+extern const uint8_t voice_data[];
 void usart1_handle_task(void *pvP)
 {
-
-    u8 rev = 0;
-    printf("uart task is init\r\n");
+    stg_task_msg msg;
     while (1)
     {
-        if ((xQueueRx != 0) && (xQueueReceive(xQueueRx, &rev, portMAX_DELAY)))
+        if ((xQueueRx != 0) && (xQueueReceive(xQueueRx, &msg, portMAX_DELAY)))
         {
-            printf("0x%x,\r\n", rev);
+            //printf("rev data, msg_type = %d \r\n", msg.msg_type);
+            if (msg.msg_type != MSG_TYPE_UART1)
+            {
+                continue;
+            }
+
+            //printf("rev data, msg data = %d \r\n", msg.msg_value);
+
+            //continue;
+            if (msg.msg_value == 1)
+            {
+                voice_in_queue(voice_buf.buf1);
+            }
+            else
+            {
+                voice_in_queue(voice_buf.buf0);
+            }
         }
         else
         {
-            printf("no rev data \r\n");
+//            printf("no rev data \r\n");
         }
     }
 }
 
 void user_task1(void *pvP)
 {
-    printf("task1 is init\r\n");
     while (1)
     {
-        LED1(ON);              // ÁÁ
-        Delay(0x6FFFEF);
-        LED1(OFF);         // Ãð
+        if (!is_voice_queue_empty())
+        {
+            //printf("voice out data \r\n");
+            voice_out_queue();
+        }
+        else
+        {
+            //printf("voice no data \r\n");
+        }
+//        LED1(ON);          // ÁÁ
+//        Delay(0x6FFFEF);
+//        LED1(OFF);         // Ãð
 
-        vTaskDelay(4000);
+//        vTaskDelay(4000);
     }
 }
 
 void user_task2(void *pvP)
 {
-    printf("task2 is init\r\n");
+//    printf("task2 is init\r\n");
     while (1)
     {
         //printf("task2 is start\r\n");

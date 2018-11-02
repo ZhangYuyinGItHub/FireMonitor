@@ -363,7 +363,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER, STM32F10X_HD</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CMSIS;..\FWlib\inc;..\USER;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\UART</IncludePath>
+              <IncludePath>..\CMSIS;..\FWlib\inc;..\USER;..\FreeRTOS\include;..\FreeRTOS\portable\RVDS\ARM_CM3;..\UART;..\voice</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -444,6 +444,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Voice</GroupName>
+          <Files>
+            <File>
+              <FileName>voice.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\voice\voice.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>FWlib</GroupName>
           <Files>
             <File>
@@ -465,6 +475,11 @@
               <FileName>misc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWlib\src\misc.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_dma.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FWlib\src\stm32f10x_dma.c</FilePath>
             </File>
           </Files>
         </Group>

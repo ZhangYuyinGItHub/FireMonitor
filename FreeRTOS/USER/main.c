@@ -16,6 +16,8 @@
 #include  "task.h"
 #include  "user_task.h"
 
+#include  "voice.h"
+
 
 /*
  * 函数名：main
@@ -35,14 +37,12 @@ int main(void)
 
     /*串口模块初始化*/
     USART1_Config();
-    UART1_NVIC_Configuration();
+    //UART1_NVIC_Configuration();
+    USART2_Config();
+
+    voice_init();
 
     os_task_init();
-
-
-
-
-
 
     vTaskStartScheduler();
 
