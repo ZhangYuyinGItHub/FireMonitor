@@ -37,7 +37,7 @@ extern st_Voice_buf voice_buf;
 
 void user_task1(void *pvP);
 void user_task2(void *pvP);
-void usart1_handle_task(void *pvP);
+void user_msg_handle_task(void *pvP);
 
 void os_task_init(void)
 {
@@ -70,8 +70,8 @@ void os_task_init(void)
                 (UBaseType_t)USER_TASK2_PRIO,
                 (TaskHandle_t *)&user_task2_handler);
 
-    xTaskCreate((TaskFunction_t)usart1_handle_task,
-                (const char *)"usart1_handle_task",
+    xTaskCreate((TaskFunction_t)user_msg_handle_task,
+                (const char *)"user_msg_handle_task",
                 (uint16_t)UART1_REV_STK,
                 (void *)NULL,
                 (UBaseType_t)UART1_REV_PRIO,
@@ -85,35 +85,22 @@ void Delay(__IO u32 nCount)
     for (; nCount != 0; nCount--);
 }
 
-extern const uint8_t voice_data[];
-void usart1_handle_task(void *pvP)
+/**
+  * @brief : user_msg_handle_task, used for user msg handle.
+  * @param : void *pvP, task input param form task create.
+  * @retval : none
+  */
+void user_msg_handle_task(void *pvP)
 {
     stg_task_msg msg;
     while (1)
     {
         if ((xQueueRx != 0) && (xQueueReceive(xQueueRx, &msg, portMAX_DELAY)))
         {
-            //printf("rev data, msg_type = %d \r\n", msg.msg_type);
-            if (msg.msg_type != MSG_TYPE_UART1)
+					  if (msg.msg_type == MSG_TYPE_DMA_UART1)
             {
-                continue;
-            }
-
-            //printf("rev data, msg data = %d \r\n", msg.msg_value);
-
-            //continue;
-            if (msg.msg_value == 1)
-            {
-                voice_in_queue(voice_buf.buf1);
-            }
-            else
-            {
-                voice_in_queue(voice_buf.buf0);
-            }
-        }
-        else
-        {
-//            printf("no rev data \r\n");
+							  voice_msg_handle(&msg);
+						}
         }
     }
 }

@@ -7,6 +7,10 @@
  *          | PA9  - USART1(Tx)      |
  *          | PA10 - USART1(Rx)      |
  *           ------------------------
+ *           ------------------------
+ *          | PA2  - USART2(Tx)      |
+ *          | PA3  - USART2(Rx)      |
+ *           ------------------------
  * 库版本  ：ST3.5.0
  *
  * 作者    ：fire  QQ: 313303034
@@ -19,6 +23,15 @@
 #include "stm32f10x_usart.h"
 #include "misc.h"
 
+/*
+ * 函数名：uart_send_data
+ * 描述  ：uart发送接口，按字节查询发送
+ * 输入  ：USART_TypeDef *uart_idx:  串口索引USART1或者USART2;
+ *         uint8_t *buf           :  串口发送buffer
+ *         uint32_t len           :  待发送的数据长度
+ * 输出  : 无
+ * 调用  ：外部调用
+ */
 void uart_send_data(USART_TypeDef *uart_idx, uint8_t *buf, uint32_t len)
 {
     uint32_t index = 0;
@@ -56,7 +69,7 @@ void USART1_Config(void)
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     /* USART1 mode config */
-    USART_InitStructure.USART_BaudRate = 9600;
+    USART_InitStructure.USART_BaudRate = 115200;
     USART_InitStructure.USART_WordLength = USART_WordLength_8b;
     USART_InitStructure.USART_StopBits = USART_StopBits_1;
     USART_InitStructure.USART_Parity = USART_Parity_No ;
@@ -67,6 +80,10 @@ void USART1_Config(void)
     //USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);//enable uasrt1 int
 
     USART_Cmd(USART1, ENABLE);
+
+    /*Bug: fix lost first byte when send uart*/
+    //USART_ClearFlag(USART1, USART_FLAG_TC);
+    while (USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);
 }
 
 void USART2_Config(void)
@@ -110,6 +127,10 @@ void USART2_Config(void)
     //USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
     /* Enable USART2 */
     USART_Cmd(USART2, ENABLE);
+
+    /*Bug: fix lost first byte when send uart*/
+    //USART_ClearFlag(USART2, USART_FLAG_TC);
+    while (USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
 }
 
 

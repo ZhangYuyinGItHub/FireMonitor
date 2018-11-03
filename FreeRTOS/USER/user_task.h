@@ -17,6 +17,7 @@ typedef struct
 typedef enum
 {
     MSG_TYPE_UART1 = 0,
+	  MSG_TYPE_DMA_UART1,
     MSG_TYPE_MAX_NUM,
 } enum_msg_type;
 

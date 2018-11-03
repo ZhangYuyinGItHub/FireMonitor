@@ -2,6 +2,7 @@
 #define _VOICE_H_
 
 #include "stm32f10x.h"
+#include "user_task.h"
 
 #define DMA_SIZE             120
 #define VOICE_BUFFER_SIZE    1024
@@ -38,5 +39,7 @@ void voice_in_queue(uint8_t *buffer);
 void voice_init_Queue(void);
 uint8_t voice_out_queue(void);
 uint8_t is_voice_queue_empty(void);
+
+void voice_msg_handle(stg_task_msg *pMsg);
 
 #endif
