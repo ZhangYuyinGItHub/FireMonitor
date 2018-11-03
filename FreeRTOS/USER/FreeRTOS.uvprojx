@@ -14,6 +14,8 @@
         <TargetCommonOption>
           <Device>STM32F103RE</Device>
           <Vendor>STMicroelectronics</Vendor>
+          <PackID>Keil.STM32F1xx_DFP.2.1.0</PackID>
+          <PackURL>http://www.keil.com/pack/</PackURL>
           <Cpu>IRAM(0x20000000-0x2000FFFF) IROM(0x8000000-0x807FFFF) CLOCK(8000000) CPUTYPE("Cortex-M3")</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"STARTUP\ST\STM32F10x\startup_stm32f10x_hd.s" ("STM32 High Density Line Startup Code")</StartupFile>
@@ -451,6 +453,11 @@
               <FileType>1</FileType>
               <FilePath>..\voice\voice.c</FilePath>
             </File>
+            <File>
+              <FileName>call_button.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\voice\call_button.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -480,6 +487,11 @@
               <FileName>stm32f10x_dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\FWlib\src\stm32f10x_dma.c</FilePath>
+            </File>
+            <File>
+              <FileName>stm32f10x_exti.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FWlib\src\stm32f10x_exti.c</FilePath>
             </File>
           </Files>
         </Group>

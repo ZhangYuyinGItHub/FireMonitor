@@ -18,7 +18,7 @@
 /*============================================================================*
  *                              External Variables
  *============================================================================*/
- 
+
 extern QueueHandle_t xQueueRx;
 
 /*============================================================================*
@@ -192,6 +192,7 @@ void usart1_dma_nvic_config(void)
     NVIC_Init(&NVIC_InitStructure);
 }
 
+
 /**
   * @brief  This function handles usart1 exception.
   * @param  None
@@ -204,7 +205,15 @@ void USART1_IRQHandler(void)
     if (USART_GetITStatus(USART1, USART_IT_RXNE) != RESET)
     {
         value = USART_ReceiveData(USART1);
-        value = value;
+        //value = value;
+        if (value == 0x01)
+        {
+
+        }
+        else
+        {
+            printf("[uart] data = %d\r\n", value);
+        }
     }
     portEND_SWITCHING_ISR(xHigherPriorityTaskWoken);
 
@@ -261,17 +270,17 @@ void DMA1_Channel5_IRQHandler(void)
   * @param  stg_task_msg* pMsg, voice msg struct
   * @retval : None
   */
-void voice_msg_handle(stg_task_msg* pMsg)
+void voice_msg_handle(stg_task_msg *pMsg)
 {
-	  if (pMsg->msg_type == MSG_TYPE_DMA_UART1)
-		{
-				if (pMsg->msg_value == 1)
-				{
-						voice_in_queue(voice_buf.buf1);
-				}
-				else
-				{
-						voice_in_queue(voice_buf.buf0);
-				}
-	  }
+    if (pMsg->msg_type == MSG_TYPE_DMA_UART1)
+    {
+        if (pMsg->msg_value == 1)
+        {
+            voice_in_queue(voice_buf.buf1);
+        }
+        else
+        {
+            voice_in_queue(voice_buf.buf0);
+        }
+    }
 }

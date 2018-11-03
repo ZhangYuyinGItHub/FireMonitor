@@ -18,6 +18,8 @@
 
 #include  "voice.h"
 
+#include "call_button.h"
+
 
 /*
  * º¯ÊýÃû£ºmain
@@ -41,6 +43,9 @@ int main(void)
     USART2_Config();
 
     voice_init();
+
+    /**call button config*/
+    call_btn_init();
 
     os_task_init();
 
