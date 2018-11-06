@@ -9,6 +9,7 @@
 #include "usart1.h"
 #include "string.h"
 #include "user_task.h"
+#include "adpcm.h"
 
 /*============================================================================*
  *                              Micro
@@ -25,12 +26,14 @@ extern QueueHandle_t xQueueRx;
  *                              Local Variables
  *============================================================================*/
 
-st_Voice_buf voice_buf = {0};
-
+st_Voice_buf g_pingpang_buf = {0};
 static uint8_t voice_date_buf[M_BLOCK_SIZE * M_BLOCK_NUM] = {0};
-st_voice_queue  g_voice_data;
+st_voice_queue  g_voice_queue_data;
 
-const uint8_t voice_data[] = {0};
+
+/*adpcm state and decode buffer*/
+adpcm_state dec_state = {0};
+uint16_t decode_buf[M_BLOCK_SIZE / 2] = {0};
 /*============================================================================*
  *                              Local Functions
  *============================================================================*/
@@ -44,14 +47,11 @@ void usart1_dma_config(void);
  */
 void voice_init_Queue(void)
 {
-    g_voice_data.size = M_BLOCK_NUM;
-    g_voice_data.send_idx   = 0;
-    g_voice_data.store_idx  = 0;
-    g_voice_data.pkt_sn = 0;
+    g_voice_queue_data.size = M_BLOCK_NUM;
+    g_voice_queue_data.send_idx   = 0;
+    g_voice_queue_data.store_idx  = 0;
 
-    g_voice_data.flag  = 1;
-    g_voice_data.send_flag = 0;
-    g_voice_data.p_buf = (uint8_t *)voice_date_buf;
+    g_voice_queue_data.p_buf = (uint8_t *)voice_date_buf;
 }
 /**
  * @brief in voice queue
@@ -61,19 +61,19 @@ void voice_init_Queue(void)
 void voice_in_queue(uint8_t *buffer)
 {
     uint32_t tail;
-    tail = (g_voice_data.store_idx + 1) % g_voice_data.size;
-    if (tail == g_voice_data.send_idx)
+    tail = (g_voice_queue_data.store_idx + 1) % g_voice_queue_data.size;
+    if (tail == g_voice_queue_data.send_idx)
     {
         //voice queue is full.
     }
     else
     {
         /*copy from buffer to voice queue*/
-        memcpy(g_voice_data.p_buf + g_voice_data.store_idx * M_BLOCK_SIZE,
+        memcpy(g_voice_queue_data.p_buf + g_voice_queue_data.store_idx * M_BLOCK_SIZE,
                (uint8_t *) buffer,
                M_BLOCK_SIZE);
     }
-    g_voice_data.store_idx = tail;
+    g_voice_queue_data.store_idx = tail;
 }
 /**
  * @brief out voice queue
@@ -82,7 +82,7 @@ void voice_in_queue(uint8_t *buffer)
  */
 uint8_t voice_out_queue(void)
 {
-    if (g_voice_data.store_idx == g_voice_data.send_idx)
+    if (g_voice_queue_data.store_idx == g_voice_queue_data.send_idx)
     {
         //voice queue is empty.
         return 1;
@@ -90,9 +90,10 @@ uint8_t voice_out_queue(void)
     else
     {
 
-        uart_send_data(USART2, g_voice_data.p_buf + g_voice_data.send_idx * M_BLOCK_SIZE, M_BLOCK_SIZE);
+        uart_send_data(USART2, g_voice_queue_data.p_buf + g_voice_queue_data.send_idx * M_BLOCK_SIZE,
+                       M_BLOCK_SIZE);
         //调整队列
-        g_voice_data.send_idx = (g_voice_data.send_idx + 1) % g_voice_data.size;
+        g_voice_queue_data.send_idx = (g_voice_queue_data.send_idx + 1) % g_voice_queue_data.size;
 
         return 0;
     }
@@ -105,7 +106,7 @@ uint8_t voice_out_queue(void)
  */
 uint8_t is_voice_queue_full(void)
 {
-    if ((g_voice_data.store_idx + 1) % g_voice_data.size == g_voice_data.send_idx)
+    if ((g_voice_queue_data.store_idx + 1) % g_voice_queue_data.size == g_voice_queue_data.send_idx)
     {
         //queue is full
         return 1;
@@ -123,7 +124,7 @@ uint8_t is_voice_queue_full(void)
  */
 uint8_t is_voice_queue_empty(void)
 {
-    if (g_voice_data.store_idx == g_voice_data.send_idx)
+    if (g_voice_queue_data.store_idx == g_voice_queue_data.send_idx)
     {
         //queue is empty
         return 1;
@@ -146,7 +147,12 @@ void voice_init(void)
     usart1_dma_config();
     usart1_dma_nvic_config();
 
-    voice_buf.buf_flag = 0;
+    g_pingpang_buf.buf_flag = 0;
+
+    dec_state.valprev = 0;
+    dec_state.index = 0;
+    dec_state.peak_level = -32768;
+    dec_state.write_out_index = 0;
 }
 
 void usart1_dma_config(void)
@@ -160,7 +166,7 @@ void usart1_dma_config(void)
     /* DMA1 Channel5 (triggered by USART1 Rx event) Config */
     DMA_DeInit(DMA1_Channel5);
     DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)&USART1->DR;// DMA 源地址
-    DMA_InitStructure.DMA_MemoryBaseAddr     = (uint32_t)voice_buf.buf0;// DMA 目的地址
+    DMA_InitStructure.DMA_MemoryBaseAddr     = (uint32_t)g_pingpang_buf.buf0;// DMA 目的地址
     DMA_InitStructure.DMA_DIR                = DMA_DIR_PeripheralSRC;//pripheral act in source role
     DMA_InitStructure.DMA_BufferSize         = DMA_SIZE ;
     DMA_InitStructure.DMA_PeripheralInc      = DMA_PeripheralInc_Disable; //源地址不需要增长
@@ -236,7 +242,7 @@ void DMA1_Channel5_IRQHandler(void)
         {
             stg_task_msg msg;
             msg.msg_type = MSG_TYPE_DMA_UART1;
-            msg.msg_value = voice_buf.buf_flag;
+            msg.msg_value = g_pingpang_buf.buf_flag;
             if (pdPASS == xQueueSendFromISR(xQueueRx, &msg, 0))
             {
                 //printf("uart send msg success\r\n");
@@ -249,15 +255,15 @@ void DMA1_Channel5_IRQHandler(void)
 
         DMA_Cmd(DMA1_Channel5, DISABLE);//Disable DMA通道
         DMA_SetCurrDataCounter(DMA1_Channel5, (uint32_t)DMA_SIZE);
-        if (voice_buf.buf_flag)
+        if (g_pingpang_buf.buf_flag)
         {
-            voice_buf.buf_flag = 0;
-            DMA1_Channel5->CMAR = (uint32_t)voice_buf.buf0;
+            g_pingpang_buf.buf_flag = 0;
+            DMA1_Channel5->CMAR = (uint32_t)g_pingpang_buf.buf0;
         }
         else
         {
-            voice_buf.buf_flag = 1;
-            DMA1_Channel5->CMAR = (uint32_t)voice_buf.buf1;
+            g_pingpang_buf.buf_flag = 1;
+            DMA1_Channel5->CMAR = (uint32_t)g_pingpang_buf.buf1;
         }
 
         DMA_Cmd(DMA1_Channel5, ENABLE);//Enable DMA通道
@@ -274,13 +280,30 @@ void voice_msg_handle(stg_task_msg *pMsg)
 {
     if (pMsg->msg_type == MSG_TYPE_DMA_UART1)
     {
+        uint8_t *p_temp_buf;
         if (pMsg->msg_value == 1)
         {
-            voice_in_queue(voice_buf.buf1);
+            //voice_in_queue(g_pingpang_buf.buf1);
+            p_temp_buf = &g_pingpang_buf.buf1[0];
         }
         else
         {
-            voice_in_queue(voice_buf.buf0);
+            //voice_in_queue(g_pingpang_buf.buf0);
+            p_temp_buf = &g_pingpang_buf.buf0[0];
+        }
+
+        /*encode voice data from uart*/
+        {
+            uint16_t i = 0;
+            uint16_t len = DMA_SIZE / 20;
+            for (i = 0; i < len; i++)
+            {
+                dec_state.write_out_index = 0;/*index reset 0 , or cause array out of bounds*/
+                decode_adpcm_16to3(p_temp_buf + i * 20, 20, (uint16_t *)decode_buf, &dec_state);
+                voice_in_queue((uint8_t *)decode_buf);
+            }
+
         }
     }
 }
+

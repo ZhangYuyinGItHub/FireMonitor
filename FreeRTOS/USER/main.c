@@ -45,7 +45,8 @@ int main(void)
     voice_init();
 
     /**call button config*/
-    call_btn_init();
+    //call_btn_init();
+
 
     os_task_init();
 

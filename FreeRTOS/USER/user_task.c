@@ -12,7 +12,7 @@
  *                              Micro
  *============================================================================*/
 #define USER_TASK1_PRIO   3
-#define USER_TASK1_STK    TASK_STK_SIZE
+#define USER_TASK1_STK    (TASK_STK_SIZE)
 TaskHandle_t user_task1_handler;
 
 
@@ -22,7 +22,7 @@ TaskHandle_t user_task2_handler;
 
 
 #define UART1_REV_PRIO    4
-#define UART1_REV_STK    TASK_STK_SIZE
+#define UART1_REV_STK    (TASK_STK_SIZE*2)
 TaskHandle_t uart1_task_handler;
 
 
@@ -63,12 +63,12 @@ void os_task_init(void)
                 (UBaseType_t)USER_TASK1_PRIO,
                 (TaskHandle_t *)&user_task1_handler);
 
-    xTaskCreate((TaskFunction_t)user_task2,
-                (const char *)"user_task2",
-                (uint16_t)USER_TASK2_STK,
-                (void *)NULL,
-                (UBaseType_t)USER_TASK2_PRIO,
-                (TaskHandle_t *)&user_task2_handler);
+//    xTaskCreate((TaskFunction_t)user_task2,
+//                (const char *)"user_task2",
+//                (uint16_t)USER_TASK2_STK,
+//                (void *)NULL,
+//                (UBaseType_t)USER_TASK2_PRIO,
+//                (TaskHandle_t *)&user_task2_handler);
 
     xTaskCreate((TaskFunction_t)user_msg_handle_task,
                 (const char *)"user_msg_handle_task",
@@ -97,11 +97,12 @@ void user_msg_handle_task(void *pvP)
     {
         if ((xQueueRx != 0) && (xQueueReceive(xQueueRx, &msg, portMAX_DELAY)))
         {
-					  if (msg.msg_type == MSG_TYPE_DMA_UART1)
+            if (msg.msg_type == MSG_TYPE_DMA_UART1)
             {
-							  voice_msg_handle(&msg);
-						}
+                voice_msg_handle(&msg);
+            }
         }
+        //printf("user_msg_handle_task\r\n");
     }
 }
 
@@ -112,17 +113,14 @@ void user_task1(void *pvP)
         if (!is_voice_queue_empty())
         {
             //printf("voice out data \r\n");
+            LED1(ON);          // ¡¡
             voice_out_queue();
         }
         else
         {
             //printf("voice no data \r\n");
+            LED1(OFF);          // ¡¡
         }
-//        LED1(ON);          // ¡¡
-//        Delay(0x6FFFEF);
-//        LED1(OFF);         // √
-
-//        vTaskDelay(4000);
     }
 }
 

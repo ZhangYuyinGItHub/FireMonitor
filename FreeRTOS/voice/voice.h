@@ -4,7 +4,7 @@
 #include "stm32f10x.h"
 #include "user_task.h"
 
-#define DMA_SIZE             120
+#define DMA_SIZE             (360) /*include 2 vocie frame*/
 #define VOICE_BUFFER_SIZE    1024
 
 typedef struct
@@ -17,15 +17,11 @@ typedef struct
 /*=================================================
  *             voice queue config
  ==================================================*/
-#define  M_BLOCK_SIZE    DMA_SIZE//320
-#define  M_BLOCK_NUM     16
+#define  M_BLOCK_SIZE    (106)//DMA_SIZE//320
+#define  M_BLOCK_NUM     128//16
 
 typedef struct
 {
-    uint8_t     flag;
-    uint8_t     send_flag;      //voice buffered to send
-
-    uint32_t    pkt_sn;
     uint32_t    size;
     uint32_t    send_idx;       //head
     uint32_t    store_idx;       //tail
@@ -34,7 +30,6 @@ typedef struct
 
 
 void voice_init(void);
-uint8_t voice_get_buf_index(void);
 void voice_in_queue(uint8_t *buffer);
 void voice_init_Queue(void);
 uint8_t voice_out_queue(void);

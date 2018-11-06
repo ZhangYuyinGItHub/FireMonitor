@@ -30,9 +30,11 @@ void NMI_Handler(void)
 {
 }
 
+#include "usart1.h"
 void HardFault_Handler(void)
 {
     /* Go to infinite loop when Hard Fault exception occurs */
+    printf("[HardFault_Handler]\r\n");
     while (1)
     {
     }
